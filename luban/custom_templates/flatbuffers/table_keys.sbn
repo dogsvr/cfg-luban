@@ -1,9 +1,0 @@
-{
-{{~for table in __tables~}}
-  {{~if table.is_map_table ~}}
-  "{{table.full_name}}": { "mode": "map", "keys": ["{{table.index}}"] },
-  {{~else if table.is_list_table ~}}
-  "{{table.full_name}}": { "mode": "list", "index": "{{table.index}}", "is_union": {{table.is_union_index}}, "keys": [{{table.index_list | array.each do; ret '"' + $0.index_field.name + '"'; end | array.join ', '}}] },
-  {{~end~}}
-{{~end~}}
-}
