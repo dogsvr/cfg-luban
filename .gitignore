@@ -1,5 +1,2 @@
-node_modules/
-gen_output/
-tools/luban/
-tools/flatc*
-dist/
+**/node_modules/
+**/dist/

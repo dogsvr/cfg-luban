@@ -1,17 +1,17 @@
 /**
- * gen_table_keys.ts — Generate table_keys.json from __tables__.xlsx.
- *
- * Usage: npx tsx scripts/gen_table_keys.ts <tablesXlsxPath> <outputJsonPath>
+ * extract-table-keys — Generate table_keys.json from __tables__.xlsx.
  *
  * Reads Luban's __tables__.xlsx (columns: full_name / value_type /
  * read_schema_from_file / input / index / mode / group / ...) and produces a
- * table_keys.json consumed by sort_json.ts and the LMDB importer.
+ * table_keys.json consumed by sort-json and import-lmdb.
  *
- * Output shape matches tools/luban_custom_templates/flatbuffers/table_keys.sbn:
+ * Output shape:
  *   {
  *     "<json_filename_stem>": {
  *       "mode": "map" | "list" | "one",
  *       "keys": ["id"],                  // always present
+ *       "value_type": "Rank",            // element type, used as --root-type cfg.Tb<X>
+ *       "full_name": "TbRank",
  *       "index": "k1+k2" | "k1,k2",      // list only: raw index string
  *       "is_union": true | false         // list only: '+' = union, ',' = multi
  *     }
@@ -32,35 +32,31 @@ interface TableRow {
     value_type: string;
     input: string;
     index: string; // may be empty; "k1+k2" = union; "k1,k2" = multi
-    mode: string; // one | map | list | "" (defaults to map)
+    mode: string;  // one | map | list | "" (defaults to map)
     group: string;
 }
 
 interface TableKeyEntry {
     mode: 'one' | 'map' | 'list';
     keys: string[];
-    /** Element type name (e.g. "Rank" for TbRank). Used by gen.sh to pass
-     *  --root-type cfg.Tb<X> when flatc-compiling this table's json. */
     value_type: string;
-    /** Table wrapper name as declared in the .fbs (e.g. "TbRank"). */
     full_name: string;
-    // list-mode extras, mirroring table_keys.sbn
     index?: string;
     is_union?: boolean;
 }
 
-/** Luban json target's file-stem rule: lowercase full_name and strip dots. */
+export interface ExtractTableKeysOptions {
+    tablesXlsx: string;
+    out: string;
+}
+
 function fullNameToStem(fullName: string): string {
     return fullName.toLowerCase().replace(/\./g, '');
 }
 
-/** Parse the "index" column into key list + whether it is a union index. */
 function parseIndex(index: string, valueType: string): { keys: string[]; isUnion: boolean } {
     const raw = (index ?? '').trim();
     if (!raw) {
-        // Luban rule: empty => first field of value_type. We can't peek at
-        // the bean schema from here, so fall back to value_type as a
-        // placeholder and let the caller fix it up if needed.
         return { keys: [valueType], isUnion: false };
     }
     if (raw.includes('+')) {
@@ -72,7 +68,6 @@ function parseIndex(index: string, valueType: string): { keys: string[]; isUnion
     return { keys: [raw], isUnion: false };
 }
 
-/** Normalize mode; empty defaults to map per luban semantics. */
 function parseMode(mode: string): 'one' | 'map' | 'list' {
     const m = (mode ?? '').trim().toLowerCase();
     if (m === 'one' || m === 'list') return m;
@@ -94,7 +89,6 @@ rows = list(ws.iter_rows(values_only=True))
 if len(rows) < 3:
     print("[]")
     sys.exit(0)
-# Row 0 is the ##var header row; rows starting with ## are metadata.
 header = [ (c or "").strip() if isinstance(c, str) else c for c in rows[0] ]
 out = []
 for r in rows[1:]:
@@ -102,7 +96,6 @@ for r in rows[1:]:
     first = r[0]
     if isinstance(first, str) and first.strip().startswith("##"):
         continue
-    # Some rows are just blank padding
     if all(c is None or (isinstance(c, str) and not c.strip()) for c in r):
         continue
     obj = {}
@@ -128,23 +121,15 @@ print(json.dumps(out, ensure_ascii=False))
     }));
 }
 
-function main() {
-    const args = process.argv.slice(2);
-    if (args.length < 2) {
-        console.error('Usage: npx tsx scripts/gen_table_keys.ts <__tables__.xlsx> <output table_keys.json>');
-        process.exit(1);
-    }
-
-    const xlsxPath = path.resolve(args[0]);
-    const outPath = path.resolve(args[1]);
+export async function extractTableKeys(opts: ExtractTableKeysOptions): Promise<void> {
+    const xlsxPath = path.resolve(opts.tablesXlsx);
+    const outPath = path.resolve(opts.out);
 
     if (!fs.existsSync(xlsxPath)) {
-        console.error(`Error: ${xlsxPath} not found`);
-        process.exit(1);
+        throw new Error(`tables xlsx not found: ${xlsxPath}`);
     }
 
     const rows = readTablesXlsx(xlsxPath);
-
     const result: Record<string, TableKeyEntry> = {};
 
     for (const row of rows) {
@@ -164,7 +149,6 @@ function main() {
                 is_union: isUnion,
             };
         } else {
-            // map / one: keys only (one-mode has no meaningful key, kept for consistency)
             result[stem] = {
                 mode,
                 keys,
@@ -176,7 +160,5 @@ function main() {
 
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, JSON.stringify(result, null, 2) + '\n');
-    console.log(`Wrote ${Object.keys(result).length} table keys -> ${outPath}`);
+    console.log(`[extract-table-keys] wrote ${Object.keys(result).length} entries -> ${outPath}`);
 }
-
-main();
