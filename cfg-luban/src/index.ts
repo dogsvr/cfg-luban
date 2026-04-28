@@ -43,9 +43,9 @@ function binarySearchComposite(
 // ---- Public API ----
 
 /**
- * 按主键查找单行，返回 unpack() plain object。
- * 单主键: getCfgRow<RewardT>('TbReward', 1001)
- * 联合主键: getCfgRow<SkillT>('TbSkill', [1001, 5])
+ * Look up a single row by primary key and return an unpack()'d plain object.
+ * Single key:    getCfgRow<RewardT>('TbReward', 1001)
+ * Composite key: getCfgRow<SkillT>('TbSkill', [1001, 5])
  */
 export function getCfgRow<T>(
     tableName: string,
@@ -59,7 +59,7 @@ export function getCfgRow<T>(
     const table = rootFn(new ByteBuffer(raw));
     if (table.dataListLength() === 0) return null;
 
-    // 单 key 快速路径（零数组分配）
+    // Single-key fast path (zero array allocation)
     if (!Array.isArray(keys)) {
         const item = binarySearchSingle(table, keys, getters[0]);
         return item ? item.unpack() as T : null;
@@ -69,8 +69,8 @@ export function getCfgRow<T>(
 }
 
 /**
- * 同表批量主键查找。1次 getBinaryFast（1次 memcpy）+ N次二分。
- * 性能版：避免同表多次查找时的 N次整表 memcpy。
+ * Batch primary-key lookup against the same table. 1× getBinaryFast (1× memcpy) + N× binary search.
+ * Performance-oriented: avoids N full-table memcpys when looking up many rows in the same table.
  */
 export function getCfgRowList<T>(
     tableName: string,
@@ -95,10 +95,11 @@ export function getCfgRowList<T>(
 }
 
 /**
- * 按主键查找单行，返回 FlatBuffers accessor（不调用 unpack）。
- * ⚠️ 调用方承诺在同步代码内使用完毕（下次 getBinaryFast 后 accessor 失效）。
- * 适用于性能敏感路径：只需读取少量字段时避免全字段 unpack 开销。
- * accessor 上的字段是方法调用: item.name(), item.damage()
+ * Look up a single row by primary key and return the raw FlatBuffers accessor (no unpack).
+ * ⚠️ Caller must finish using it within the current sync turn — the accessor is invalidated
+ *    by the next getBinaryFast call.
+ * Use on performance-sensitive paths where only a few fields are read and full-row unpack
+ * would be wasted. Fields on the accessor are method calls: item.name(), item.damage().
  */
 export function getCfgRowUnsafe(
     tableName: string,
@@ -119,11 +120,11 @@ export function getCfgRowUnsafe(
 }
 
 /**
- * 遍历整张表。callback 返回 false 可提前终止。
- * 用法：
- * - 查找首个匹配: forEachCfgRow('TbReward', (row) => { if (...) { found = row; return false; } })
- * - 筛选多行: forEachCfgRow('TbItem', (row) => { if (row.type === 3) results.push(row); })
- * - 全表遍历: forEachCfgRow('TbItem', (row) => { ... })
+ * Iterate every row in the table. Return false from the callback to stop early.
+ * Patterns:
+ * - Find first match: forEachCfgRow('TbReward', (row) => { if (...) { found = row; return false; } })
+ * - Filter multiple:  forEachCfgRow('TbItem',   (row) => { if (row.type === 3) results.push(row); })
+ * - Full scan:        forEachCfgRow('TbItem',   (row) => { ... })
  */
 export function forEachCfgRow<T>(
     tableName: string,
