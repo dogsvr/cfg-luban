@@ -14,34 +14,63 @@ npm install @dogsvr/cfg-luban
 
 | Interface | Purpose |
 |-----------|---------|
-| `openCfgDb(options)` | Open the LMDB database and load `table_keys.json` |
+| `openCfgDb(options)` | Open the LMDB database and load `table_keys.json`. If `options.cfgModule` is passed (the flatc barrel), every table is auto-registered. |
 | `closeCfgDb()` | Close the DB and clear all registered tables |
-| `registerCfgTable(name, rootFn)` | Register a table's FlatBuffers root accessor |
+| `registerCfgTable(name, rootFn)` | Manually register a single table's FlatBuffers root accessor. Primary use: per-worker selective loading of large cfg, or tables that don't follow the `getRootAs<fullName>` convention. |
 | `getCfgRow<T>(table, keys)` | Primary-key lookup; returns a plain object. O(log n) |
 | `getCfgRowList<T>(table, keysList)` | Batch lookup on the same table (1 memcpy + N binary searches). O(N log n) |
 | `getCfgRowUnsafe(table, keys)` | Primary-key lookup; returns the raw FlatBuffers accessor (no unpack). O(log n) |
 | `forEachCfgRow<T>(table, cb)` | Iterate the entire table; return `false` from `cb` to stop early |
 
+The `table` argument is always the Luban `full_name` form (e.g. `'TbItem'`), matching `table_keys.json`.
+
 ## Usage
 
 ### Worker initialization
 
-Config paths should come from the worker thread config — don't hardcode them, so that a single build artifact can serve multiple environments:
+Config paths should come from the worker thread config — don't hardcode them, so that a single build artifact can serve multiple environments. cfg-luban supports two wiring styles. Pick based on table count + per-worker coverage.
+
+#### Style A — barrel module (recommended for small-to-medium cfg)
+
+Minimal boilerplate. Eager-loads every flatc class in the barrel; bundler tree-shaking is defeated by the dynamic `cfgModule[fullName]` access. Fine up to ~1000 tables; beyond that each worker pays for classes it never touches.
 
 ```ts
 import * as dogsvr from '@dogsvr/dogsvr/worker_thread';
-import { openCfgDb, registerCfgTable } from '@dogsvr/cfg-luban';
-// Accessor imports come from the TypeScript output of cfg-luban-cli.
+import { openCfgDb } from '@dogsvr/cfg-luban';
+// The barrel file `ts/<topModule>.ts` is produced by cfg-luban-cli.
 // Adjust the relative path to match your project layout.
-import { TbReward } from '<path-to-generated>/ts/tb-reward';
-import { TbSkill }  from '<path-to-generated>/ts/tb-skill';
-import { TbItem }   from '<path-to-generated>/ts/tb-item';
+import * as cfgModule from '<path-to-generated>/ts/cfg';
 
 interface MyCfg { cfgDbPath: string; tableKeysPath: string; }
 
 dogsvr.workerReady(async () => {
     dogsvr.loadWorkerThreadConfig();
     const cfg = dogsvr.getThreadConfig<MyCfg>();
+
+    openCfgDb({
+        dbPath: cfg.cfgDbPath,
+        tableKeysPath: cfg.tableKeysPath,
+        cfgModule,
+    });
+    // done — no registerCfgTable calls
+});
+```
+
+#### Style B — per-table imports + manual `registerCfgTable` (recommended for large cfg with per-worker subsets)
+
+Node only loads the imported table modules + their element-type dependencies. For cfg with thousands of tables where each worker role uses a clear subset, resident memory can drop 5–10× vs. Style A. The tradeoff is N lines of boilerplate and the need to keep the per-worker import list in sync with business code.
+
+```ts
+import * as dogsvr from '@dogsvr/dogsvr/worker_thread';
+import { openCfgDb, registerCfgTable } from '@dogsvr/cfg-luban';
+// Import only the tables this worker actually queries.
+import { TbReward } from '<path-to-generated>/ts/tb-reward';
+import { TbSkill }  from '<path-to-generated>/ts/tb-skill';
+import { TbItem }   from '<path-to-generated>/ts/tb-item';
+
+dogsvr.workerReady(async () => {
+    dogsvr.loadWorkerThreadConfig();
+    const cfg = dogsvr.getThreadConfig<{ cfgDbPath: string; tableKeysPath: string }>();
 
     openCfgDb({ dbPath: cfg.cfgDbPath, tableKeysPath: cfg.tableKeysPath });
     registerCfgTable('TbReward', TbReward.getRootAsTbReward);
@@ -101,3 +130,7 @@ forEachCfgRow<ItemT>('TbItem', (row) => {
     if (row.type === 3) weapons.push(row);
 });
 ```
+
+## Migration note
+
+LMDB keys and the `tableName` argument now use `TbXxx` (Luban `full_name`) rather than the lowercase filename stem `tbxxx`. After upgrading cfg-luban + cfg-luban-cli, rerun `npm run build` on your config package once so the regenerated LMDB matches the new keys. `registerCfgTable('tbitem', ...)` emits a one-shot warning to help catch stragglers.

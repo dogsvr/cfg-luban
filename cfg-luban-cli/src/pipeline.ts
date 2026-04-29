@@ -104,7 +104,7 @@ export async function build(opts: BuildOptions): Promise<void> {
     });
 
     // Step 4: import to LMDB
-    await importLmdb({ binDir: outBin, dbDir: outDb });
+    await importLmdb({ binDir: outBin, dbDir: outDb, tableKeysPath });
 
     console.log(`Build complete. LMDB at ${outDb}`);
 }

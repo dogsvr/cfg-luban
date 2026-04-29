@@ -191,17 +191,19 @@ async function runSortJson(argv: string[]): Promise<void> {
 
 async function runImportLmdb(argv: string[]): Promise<void> {
     const values = parseFlags(argv, {
-        'bin-dir': { type: 'string' },
-        'db-dir':  { type: 'string' },
-        'help':    { type: 'boolean', short: 'h' },
+        'bin-dir':     { type: 'string' },
+        'db-dir':      { type: 'string' },
+        'table-keys':  { type: 'string' },
+        'help':        { type: 'boolean', short: 'h' },
     });
     if (values.help) {
-        console.log('Usage: cfg-luban-cli import-lmdb --bin-dir <dir> --db-dir <dir>');
+        console.log('Usage: cfg-luban-cli import-lmdb --bin-dir <dir> --db-dir <dir> --table-keys <file>');
         return;
     }
     await importLmdb({
-        binDir: requireStr('bin-dir', values['bin-dir'] as string),
-        dbDir:  requireStr('db-dir',  values['db-dir']  as string),
+        binDir:        requireStr('bin-dir',    values['bin-dir']    as string),
+        dbDir:         requireStr('db-dir',     values['db-dir']     as string),
+        tableKeysPath: requireStr('table-keys', values['table-keys'] as string),
     });
 }
 
