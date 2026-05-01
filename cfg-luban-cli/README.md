@@ -2,6 +2,8 @@
 
 Codegen CLI for [`@dogsvr/cfg-luban`](../cfg-luban/README.md): compiles designer Excel sheets into a read-only LMDB config database via Luban + FlatBuffers.
 
+For this repo's overall layout, see the [repo README](../README.md). For how this fits into the wider framework, see [`@dogsvr/dogsvr`](https://github.com/dogsvr/dogsvr); for a working consumer, see [`example-proj-cfg`](../../example-proj-cfg).
+
 ## Install
 
 ```sh
@@ -24,7 +26,7 @@ Required tools:
 | **flatc** (≥ 23.x) | Native binary — OS/arch specific. `flatc.exe` on Windows, Mach-O on macOS, ELF on Linux. [Releases](https://github.com/google/flatbuffers/releases) |
 | **dotnet runtime** | For running Luban.dll. `apt install dotnet-runtime-8.0` / `brew install dotnet` / etc. |
 | **python3 + openpyxl** | Used by `extract-keys` to read `__tables__.xlsx`. `pip install openpyxl` |
-| **Node.js ≥ 16** | CLI itself |
+| **Node.js** | Tested on **v16.15.1 on Linux (x86-64)**. Newer LTS versions (18 / 20 / 22) are expected to work but are not routinely exercised; older versions may not. File an issue if something breaks on your runtime. |
 
 ## Usage
 

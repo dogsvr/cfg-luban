@@ -2,13 +2,15 @@
 
 Runtime library for reading Luban-generated game config (FlatBuffers + LMDB).
 
-For the config generation pipeline (Excel → LMDB), see the sibling package [`@dogsvr/cfg-luban-cli`](../cfg-luban-cli/README.md).
+For the config generation pipeline (Excel → LMDB), see the sibling package [`@dogsvr/cfg-luban-cli`](../cfg-luban-cli/README.md). For this repo's overall layout and dev workflow, see the [repo README](../README.md). For how this fits into the wider framework, see [`@dogsvr/dogsvr`](https://github.com/dogsvr/dogsvr).
 
 ## Install
 
 ```sh
 npm install @dogsvr/cfg-luban
 ```
+
+**Node.js**: tested on **v16.15.1 on Linux (x86-64)**. Newer LTS versions (18 / 20 / 22) are expected to work but are not routinely exercised; older versions may not. File an issue if something breaks on your runtime.
 
 ## API
 

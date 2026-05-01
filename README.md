@@ -9,6 +9,14 @@ Monorepo hosting two independent npm packages that together form the dogsvr game
 
 `designer_cfg/` (the actual Excel source) lives in business-side repos, not here — see [`example-proj-cfg/`](../example-proj-cfg) for a working integration example.
 
+Part of the [**dogsvr polyrepo**](https://github.com/dogsvr/dogsvr) — start at [`@dogsvr/dogsvr`](https://github.com/dogsvr/dogsvr) for the framework overview, or [`example-proj`](https://github.com/dogsvr/example-proj) for a runnable reference that uses this cfg pipeline.
+
+## Requirements
+
+**Node.js**: tested on **v16.15.1 on Linux (x86-64)**. Newer LTS versions (18 / 20 / 22) are expected to work but are not routinely exercised; older versions may not. File an issue if something breaks on your runtime.
+
+See each package's README for its own system-level prerequisites (dotnet for Luban, flatc binary, python3 + openpyxl for the CLI).
+
 ## Repo structure
 
 Two packages, flat layout, no npm workspaces. Each package has its own `package.json`, `node_modules`, and `dist`; install and build independently:
