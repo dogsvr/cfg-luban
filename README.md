@@ -1,6 +1,6 @@
 # cfg-luban
 
-Monorepo hosting two independent npm packages that together form the dogsvr game-config pipeline:
+Monorepo hosting two independent npm packages that together form the dogsvr game-config pipeline. Excel designer tables are compiled into **FlatBuffers** records stored in an **LMDB** file; at runtime the file is mmap'd, so config data stays outside the V8 heap and is shared across all worker threads in the process (and across multiple Node processes on the same host, via the OS pagecache).
 
 | Directory | npm package | Purpose |
 |---|---|---|
