@@ -1,9 +1,18 @@
 {
   "name": "@dogsvr/cfg-luban-cli",
-  "version": "0.0.1",
-  "description": "Codegen CLI for @dogsvr/cfg-luban (Excel -> LMDB)",
+  "version": "0.4.0",
+  "description": "Codegen CLI for @dogsvr/cfg-luban (Excel -> LMDB).",
+  "keywords": [
+    "dogsvr",
+    "game-config",
+    "luban",
+    "flatbuffers",
+    "lmdb",
+    "codegen",
+    "cli"
+  ],
   "bin": {
-    "cfg-luban-cli": "./dist/cli.js"
+    "cfg-luban-cli": "dist/cli.js"
   },
   "main": "./dist/pipeline.js",
   "types": "./dist/pipeline.d.ts",
@@ -15,20 +24,31 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
     "templates",
+    "LICENSE",
     "README.md"
   ],
   "scripts": {
     "build": "rm -rf dist && tsc && chmod +x dist/cli.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dogsvr/cfg-luban.git",
+    "directory": "cfg-luban-cli"
+  },
   "author": "rowanzhu",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dogsvr/cfg-luban/issues"
+  },
+  "homepage": "https://github.com/dogsvr/cfg-luban#readme",
   "dependencies": {
-    "lmdb": "^3.2.6"
+    "lmdb": "^3.5.4"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
-    "@types/node": "^22.0.0"
+    "@types/node": "^24.12.2",
+    "typescript": "^6.0.3"
   }
 }

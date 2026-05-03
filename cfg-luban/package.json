@@ -1,7 +1,14 @@
 {
   "name": "@dogsvr/cfg-luban",
-  "version": "0.0.4",
-  "description": "Luban + FlatBuffers + LMDB game config module for dogsvr",
+  "version": "0.4.0",
+  "description": "Luban + FlatBuffers + LMDB game config module for dogsvr.",
+  "keywords": [
+    "dogsvr",
+    "game-config",
+    "luban",
+    "flatbuffers",
+    "lmdb"
+  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -12,20 +19,31 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "LICENSE",
     "README.md"
   ],
   "scripts": {
     "build": "rm -rf dist && tsc"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dogsvr/cfg-luban.git",
+    "directory": "cfg-luban"
+  },
   "author": "rowanzhu",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dogsvr/cfg-luban/issues"
+  },
+  "homepage": "https://github.com/dogsvr/cfg-luban#readme",
   "dependencies": {
-    "flatbuffers": "^24.3.25",
-    "lmdb": "^3.2.6"
+    "flatbuffers": "^25.9.23",
+    "lmdb": "^3.5.4"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
-    "@types/node": "^22.0.0"
+    "@types/node": "^24.12.2",
+    "typescript": "^6.0.3"
   }
 }

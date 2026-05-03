@@ -1,17 +1,19 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "target": "ES2018",
-        "outDir": "dist",
-        "rootDir": "src",
-        "declaration": true,
-        "strict": true
-    },
-    "include": [
-        "src"
-    ],
-    "exclude": [
-        "node_modules",
-        "**/*.spec.ts"
-    ]
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2018",
+    "types": ["node"],
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "strict": true
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts"
+  ]
 }
